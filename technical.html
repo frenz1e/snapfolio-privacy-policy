@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Documentation — SnapFolio.AI</title>
+  <meta name="description" content="SnapFolio.AI technical documentation: tech stack, architecture, and RevenueCat subscription implementation.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.7;
+      color: #1a1a2e;
+      background: #fafafa;
+      padding: 0 20px;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 0 80px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 36px;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      color: #222;
+    }
+    p, li {
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    ul, ol {
+      padding-left: 24px;
+      margin-bottom: 12px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      font-size: 0.95em;
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .codeblock {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      font-size: 13px;
+      background: #f0f0f0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0 16px;
+      color: #222;
+    }
+    a {
+      color: #007AFF;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SnapFolio.AI Technical Documentation</h1>
+    <p class="subtitle">Tech stack, architecture, and subscriptions</p>
+
+    <h2>Tech Stack</h2>
+    <p>The project is built on a modern React Native stack using Expo.</p>
+    <ul>
+      <li><strong>Platform</strong>: Expo SDK 54, React Native 0.81 (New Architecture enabled)</li>
+      <li><strong>Language</strong>: TypeScript (strict typing)</li>
+      <li><strong>UI Framework</strong>: React 19 (with React Compiler), @craftreactnative/ui</li>
+      <li><strong>Styling</strong>: react-native-unistyles (Dark-first approach)</li>
+      <li><strong>Navigation</strong>: expo-router (file-based routing)</li>
+      <li><strong>State Management</strong>: Zustand</li>
+      <li><strong>Database</strong>: expo-sqlite (local data storage)</li>
+      <li><strong>AI</strong>: Google Gemini (via direct REST API call for structured output)</li>
+      <li><strong>Payments</strong>: RevenueCat (react-native-purchases)</li>
+    </ul>
+
+    <h2>Architecture</h2>
+    <p>The application follows Clean Architecture principles adapted for mobile development.</p>
+
+    <h3>Data Flow</h3>
+    <div class="codeblock"><span>UI (Components/Screens)</span> -&gt; <span>Stores (Zustand)</span> -&gt; <span>Services / Repositories</span> -&gt; <span>Database (SQLite) / External APIs</span></div>
+
+    <h3>Project Structure</h3>
+    <ul>
+      <li><strong><code>app/</code></strong>: Application routes and screens (expo-router).
+        <ul>
+          <li><code>(tabs)/</code>: Main tabs (Portfolio, Assets, Insights).</li>
+          <li><code>import/</code>: Portfolio import flow via screenshots.</li>
+        </ul>
+      </li>
+      <li><strong><code>components/</code></strong>: Reusable UI components.</li>
+      <li><strong><code>stores/</code></strong>: Global application state (Zustand).</li>
+      <li><strong><code>services/</code></strong>: Business logic and interaction with external APIs.
+        <ul>
+          <li><code>ai/</code>: Image recognition logic via Gemini.</li>
+          <li><code>valuation/</code>: Asset valuation logic.</li>
+          <li><code>risk/</code>: Portfolio risk analysis.</li>
+          <li><code>purchases/</code>: Service for handling purchases.</li>
+        </ul>
+      </li>
+      <li><strong><code>db/</code></strong>: Database operations.
+        <ul>
+          <li><code>repositories/</code>: Data access layer (DAO).</li>
+          <li><code>migrations.ts</code>: DB schema and migrations.</li>
+        </ul>
+      </li>
+      <li><strong><code>entities/</code></strong>: Domain TypeScript types and constants.</li>
+    </ul>
+
+    <h3>Key Features</h3>
+    <ul>
+      <li><strong>Local-first</strong>: All data is stored locally in SQLite. No backend for storing user data.</li>
+      <li><strong>Privacy</strong>: No mandatory sign-up.</li>
+      <li><strong>AI Import</strong>: Uses Gemini to extract data from brokerage app screenshots.</li>
+    </ul>
+
+    <h2>RevenueCat Implementation</h2>
+    <p>RevenueCat integration is used to manage premium subscriptions.</p>
+
+    <h3>Core Components</h3>
+    <ol>
+      <li>
+        <p><strong>Service (<code>services/purchases/purchases-service.ts</code>)</strong>:</p>
+        <ul>
+          <li>Responsible for SDK initialization (<code>Purchases.configure</code>).</li>
+          <li>Provides methods for fetching packages (<code>getPackages</code>), purchasing (<code>purchasePackage</code>), restoring purchases (<code>restorePurchases</code>), and checking subscription status (<code>getCustomerInfo</code>).</li>
+          <li>Uses API key from environment variables: <code>EXPO_PUBLIC_REVENUECAT_IOS_API_KEY</code>.</li>
+        </ul>
+      </li>
+      <li>
+        <p><strong>Store (<code>stores/purchases-store.ts</code>)</strong>:</p>
+        <ul>
+          <li>Manages reactive subscription state (<code>isPremium</code>).</li>
+          <li>Stores available packages (<code>packages</code>) and user info (<code>customerInfo</code>).</li>
+          <li>Loads data on app launch (in <code>app/_layout.tsx</code>) in non-blocking mode.</li>
+        </ul>
+      </li>
+      <li>
+        <p><strong>UI</strong>:</p>
+        <ul>
+          <li><strong>Paywall (<code>app/paywall.tsx</code>)</strong>: Premium access purchase screen. Displays available packages fetched from RevenueCat, or fallback options if the network is unavailable.</li>
+          <li><strong>Gating (<code>components/premium-gate.tsx</code>)</strong>: Wrapper component to hide content from non-subscribed users.</li>
+          <li><strong>Badge (<code>components/premium-badge.tsx</code>)</strong>: Premium status indicator.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Workflow</h3>
+    <ol>
+      <li>On app start, <code>PurchasesService</code> is configured.</li>
+      <li><code>PurchasesStore</code> requests current <code>CustomerInfo</code> and checks for an active <code>entitlement</code> (identifier: <code>premium</code>).</li>
+      <li>If the user has an active subscription, the <code>isPremium</code> flag is set to <code>true</code>.</li>
+      <li>When accessing paid features (e.g., unlimited AI imports), the <code>isPremium</code> flag is checked. If <code>false</code>, the paywall is shown.</li>
+    </ol>
+
+    <div class="footer">
+      <p>&copy; 2026 SnapFolio.AI. All rights reserved. | <a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms</a> | <a href="proposal.html">Proposal</a></p>
+    </div>
+  </div>
+</body>
+</html>
