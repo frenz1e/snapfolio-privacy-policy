@@ -67,12 +67,35 @@
       overflow-x: auto;
       margin: 12px 0 16px;
       color: #222;
+      white-space: pre;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      font-size: 15px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      color: #333;
+    }
+    th {
+      font-weight: 600;
+      color: #222;
+      background: #f5f5f5;
     }
     a {
       color: #007AFF;
       text-decoration: none;
     }
     a:hover { text-decoration: underline; }
+    hr {
+      border: none;
+      border-top: 1px solid #e0e0e0;
+      margin: 32px 0;
+    }
     .footer {
       margin-top: 48px;
       padding-top: 24px;
@@ -84,101 +107,206 @@
 </head>
 <body>
   <div class="container">
-    <h1>SnapFolio.AI Technical Documentation</h1>
-    <p class="subtitle">Tech stack, architecture, and subscriptions</p>
+    <h1>SnapFolio.AI — Technical Documentation</h1>
 
-    <h2>Tech Stack</h2>
-    <p>The project is built on a modern React Native stack using Expo.</p>
-    <ul>
-      <li><strong>Platform</strong>: Expo SDK 54, React Native 0.81 (New Architecture enabled)</li>
-      <li><strong>Language</strong>: TypeScript (strict typing)</li>
-      <li><strong>UI Framework</strong>: React 19 (with React Compiler), @craftreactnative/ui</li>
-      <li><strong>Styling</strong>: react-native-unistyles (Dark-first approach)</li>
-      <li><strong>Navigation</strong>: expo-router (file-based routing)</li>
-      <li><strong>State Management</strong>: Zustand</li>
-      <li><strong>Database</strong>: expo-sqlite (local data storage)</li>
-      <li><strong>AI</strong>: Google Gemini (via direct REST API call for structured output)</li>
-      <li><strong>Payments</strong>: RevenueCat (react-native-purchases)</li>
-    </ul>
+    <h2>1. Overview</h2>
+    <p><strong>SnapFolio.AI</strong> is a privacy-first, AI-powered portfolio tracker for iOS and Android. Users photograph brokerage statements, the app extracts holdings via AI (Google Gemini), and tracks values in real-time using TwelveData market data. Premium features are monetized through RevenueCat in-app subscriptions.</p>
+    <p><strong>Core philosophy:</strong> Local-first — all data lives on-device in SQLite. No user accounts, no backend database. Data only leaves the device for AI extraction and price lookups.</p>
 
-    <h2>Architecture</h2>
-    <p>The application follows Clean Architecture principles adapted for mobile development.</p>
+    <h3>Tech Stack</h3>
+    <table>
+      <thead>
+        <tr><th>Layer</th><th>Technology</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Framework</td><td>React Native (Expo SDK 54), TypeScript</td></tr>
+        <tr><td>Navigation</td><td>Expo Router v6 (file-based)</td></tr>
+        <tr><td>State</td><td>Zustand</td></tr>
+        <tr><td>Database</td><td>SQLite (expo-sqlite)</td></tr>
+        <tr><td>AI</td><td>Google Gemini API (gemini-2.5-flash)</td></tr>
+        <tr><td>Market Data</td><td>TwelveData via Fly.io proxy</td></tr>
+        <tr><td>Subscriptions</td><td>RevenueCat (react-native-purchases)</td></tr>
+      </tbody>
+    </table>
 
-    <h3>Data Flow</h3>
-    <div class="codeblock"><span>UI (Components/Screens)</span> -&gt; <span>Stores (Zustand)</span> -&gt; <span>Services / Repositories</span> -&gt; <span>Database (SQLite) / External APIs</span></div>
+    <hr>
+
+    <h2>2. Architecture</h2>
+
+    <h3>High-Level Diagram</h3>
+    <div class="codeblock">┌─────────────────────────────────────────────────────────┐
+│                      UI Layer                           │
+│  Expo Router screens → components → craftrn-ui library  │
+└──────────────┬──────────────────────────┬───────────────┘
+               │                          │
+       ┌───────▼───────┐          ┌───────▼───────┐
+       │  Zustand       │          │  React Hooks   │
+       │  Stores        │          │  (side effects)│
+       └───────┬───────┘          └───────┬───────┘
+               │                          │
+       ┌───────▼──────────────────────────▼───────┐
+       │             Service Layer                 │
+       │  ai/ · market-data/ · purchases/ · risk/  │
+       └───────┬──────────────────────────┬───────┘
+               │                          │
+       ┌───────▼───────┐          ┌───────▼───────┐
+       │  Repositories  │          │  External APIs │
+       │  (SQLite DAOs) │          │  Gemini, 12Data│
+       └───────┬───────┘          │  RevenueCat    │
+               │                  └────────────────┘
+       ┌───────▼───────┐
+       │  SQLite DB     │
+       │  (on-device)   │
+       └───────────────┘</div>
 
     <h3>Project Structure</h3>
-    <ul>
-      <li><strong><code>app/</code></strong>: Application routes and screens (expo-router).
-        <ul>
-          <li><code>(tabs)/</code>: Main tabs (Portfolio, Assets, Insights).</li>
-          <li><code>import/</code>: Portfolio import flow via screenshots.</li>
-        </ul>
-      </li>
-      <li><strong><code>components/</code></strong>: Reusable UI components.</li>
-      <li><strong><code>stores/</code></strong>: Global application state (Zustand).</li>
-      <li><strong><code>services/</code></strong>: Business logic and interaction with external APIs.
-        <ul>
-          <li><code>ai/</code>: Image recognition logic via Gemini.</li>
-          <li><code>valuation/</code>: Asset valuation logic.</li>
-          <li><code>risk/</code>: Portfolio risk analysis.</li>
-          <li><code>purchases/</code>: Service for handling purchases.</li>
-        </ul>
-      </li>
-      <li><strong><code>db/</code></strong>: Database operations.
-        <ul>
-          <li><code>repositories/</code>: Data access layer (DAO).</li>
-          <li><code>migrations.ts</code>: DB schema and migrations.</li>
-        </ul>
-      </li>
-      <li><strong><code>entities/</code></strong>: Domain TypeScript types and constants.</li>
-    </ul>
+    <div class="codeblock">snapfolio/
+├── app/                    # Screens (file-based routing)
+│   ├── _layout.tsx         # Root: DB init, theme, providers
+│   ├── paywall.tsx         # Subscription paywall (modal)
+│   ├── (tabs)/             # Bottom tabs: portfolio, assets, insights, settings
+│   └── import/             # Modal stack: capture → account → preview → confirm
+├── stores/                 # Zustand stores (portfolio, metadata, purchases, import)
+├── services/               # Business logic &amp; API clients
+├── db/                     # Migrations + repositories (SQLite DAOs)
+├── entities/               # Domain types (Asset, AssetType, ValuationMethod)
+├── hooks/                  # React hooks (price refresh, feature gating)
+├── config/                 # Feature tier limits (free vs premium)
+├── craftrn-ui/             # Custom UI component library
+└── components/             # Feature-specific UI components</div>
 
-    <h3>Key Features</h3>
-    <ul>
-      <li><strong>Local-first</strong>: All data is stored locally in SQLite. No backend for storing user data.</li>
-      <li><strong>Privacy</strong>: No mandatory sign-up.</li>
-      <li><strong>AI Import</strong>: Uses Gemini to extract data from brokerage app screenshots.</li>
-    </ul>
+    <h3>Key Data Flows</h3>
+    <p><strong>App launch:</strong> SQLite init → load stores from DB → RevenueCat packages (non-blocking) → price refresh hook starts 30s polling.</p>
+    <p><strong>AI Import:</strong> Photo → Gemini extraction → live price enrichment → smart merge (new/update/unchanged/missing) → transactional DB write.</p>
+    <p><strong>Price refresh:</strong> Filter market assets → fetch via proxy → diff check (skip if unchanged) → write to DB → recompute charts → atomic store update.</p>
 
-    <h2>RevenueCat Implementation</h2>
-    <p>RevenueCat integration is used to manage premium subscriptions.</p>
+    <hr>
 
-    <h3>Core Components</h3>
+    <h2>3. TwelveData — Market Data Provider</h2>
+
+    <h3>Architecture</h3>
+    <p>The app communicates through a <strong>backend proxy</strong> on Fly.io — it never calls TwelveData directly:</p>
+    <div class="codeblock">Mobile App  ──(x-api-key)──►  market-data-backend.fly.dev  ──(TwelveData key)──►  TwelveData API</div>
+    <p>This keeps the TwelveData API key server-side and allows caching, rate limiting, and symbol normalization.</p>
+
+    <h3>Proxy Endpoints</h3>
+    <table>
+      <thead>
+        <tr><th>Endpoint</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET /prices-new?symbols=AAPL,BTC/USD</code></td><td>Current prices (batch)</td></tr>
+        <tr><td><code>GET /timeseries?symbols=...&amp;start_date=...&amp;interval=1day</code></td><td>Historical daily prices</td></tr>
+        <tr><td><code>GET /statistics?symbol=AAPL</code></td><td>Fundamentals (PE, beta, etc.) — 24h cache</td></tr>
+        <tr><td><code>GET /profile?symbol=AAPL</code></td><td>Sector, region, description</td></tr>
+      </tbody>
+    </table>
+
+    <h3>How Prices Flow</h3>
     <ol>
-      <li>
-        <p><strong>Service (<code>services/purchases/purchases-service.ts</code>)</strong>:</p>
+      <li><strong><code>usePriceRefresh</code> hook</strong> — triggers on: asset changes, 30s interval, app foreground</li>
+      <li><strong>Price Orchestrator</strong> (<code>services/market-data/price-orchestrator.ts</code>) — stateless coordinator:
         <ul>
-          <li>Responsible for SDK initialization (<code>Purchases.configure</code>).</li>
-          <li>Provides methods for fetching packages (<code>getPackages</code>), purchasing (<code>purchasePackage</code>), restoring purchases (<code>restorePurchases</code>), and checking subscription status (<code>getCustomerInfo</code>).</li>
-          <li>Uses API key from environment variables: <code>EXPO_PUBLIC_REVENUECAT_IOS_API_KEY</code>.</li>
+          <li>Fetches current prices, diffs against in-memory state</li>
+          <li>Writes changes to DB + <code>price_history</code> table</li>
+          <li>On first run / new assets: fetches 90-day historical timeseries</li>
         </ul>
       </li>
-      <li>
-        <p><strong>Store (<code>stores/purchases-store.ts</code>)</strong>:</p>
-        <ul>
-          <li>Manages reactive subscription state (<code>isPremium</code>).</li>
-          <li>Stores available packages (<code>packages</code>) and user info (<code>customerInfo</code>).</li>
-          <li>Loads data on app launch (in <code>app/_layout.tsx</code>) in non-blocking mode.</li>
-        </ul>
-      </li>
-      <li>
-        <p><strong>UI</strong>:</p>
-        <ul>
-          <li><strong>Paywall (<code>app/paywall.tsx</code>)</strong>: Premium access purchase screen. Displays available packages fetched from RevenueCat, or fallback options if the network is unavailable.</li>
-          <li><strong>Gating (<code>components/premium-gate.tsx</code>)</strong>: Wrapper component to hide content from non-subscribed users.</li>
-          <li><strong>Badge (<code>components/premium-badge.tsx</code>)</strong>: Premium status indicator.</li>
-        </ul>
-      </li>
+      <li><strong>Price Enricher</strong> — during import, fetches live prices for AI-extracted assets (10s timeout, non-blocking)</li>
+      <li><strong>Symbol mapping:</strong> crypto symbols get <code>/USD</code> suffix (e.g., <code>BTC</code> → <code>BTC/USD</code>); all symbols uppercased and deduped</li>
     </ol>
 
-    <h3>Workflow</h3>
-    <ol>
-      <li>On app start, <code>PurchasesService</code> is configured.</li>
-      <li><code>PurchasesStore</code> requests current <code>CustomerInfo</code> and checks for an active <code>entitlement</code> (identifier: <code>premium</code>).</li>
-      <li>If the user has an active subscription, the <code>isPremium</code> flag is set to <code>true</code>.</li>
-      <li>When accessing paid features (e.g., unlimited AI imports), the <code>isPremium</code> flag is checked. If <code>false</code>, the paywall is shown.</li>
-    </ol>
+    <hr>
+
+    <h2>4. RevenueCat — Subscription Integration</h2>
+
+    <h3>Overview</h3>
+    <p>RevenueCat manages iOS in-app subscriptions with a single <code>"premium"</code> entitlement. The integration spans three layers:</p>
+    <div class="codeblock">config/features.ts          ← Feature tier definitions (free vs premium limits)
+        │
+services/purchases/         ← RevenueCat SDK wrapper (stateless API calls)
+        │
+stores/purchases-store.ts   ← Reactive state (isPremium, packages, customerInfo)
+        │
+app/paywall.tsx             ← Purchase UI (full-screen modal)</div>
+
+    <h3>SDK Configuration</h3>
+    <ul>
+      <li><strong>SDK:</strong> <code>react-native-purchases</code> v9.7.6</li>
+      <li><strong>API Key:</strong> <code>EXPO_PUBLIC_REVENUECAT_IOS_API_KEY</code></li>
+      <li><strong>Entitlement:</strong> <code>"premium"</code></li>
+      <li><strong>Init strategy:</strong> Configured eagerly on module import; gracefully degrades if API key is missing</li>
+    </ul>
+    <div class="codeblock">// services/purchases/purchases-service.ts
+const isConfigured = configureRevenueCat(); // runs on import</div>
+
+    <h3>Service Layer</h3>
+    <p><code>PurchasesService</code> is a singleton wrapping the RevenueCat SDK:</p>
+    <table>
+      <thead>
+        <tr><th>Method</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>loadPackages()</code></td><td>Fetches offerings + customer info in parallel</td></tr>
+        <tr><td><code>purchasePackage(pkg)</code></td><td>Initiates purchase; returns <code>{ cancelled: true }</code> on cancel (not an error)</td></tr>
+        <tr><td><code>restorePurchases()</code></td><td>Restores for returning subscribers</td></tr>
+        <tr><td><code>getCustomerInfo()</code></td><td>Checks current entitlement status</td></tr>
+      </tbody>
+    </table>
+    <p>All methods return typed result objects — no thrown exceptions reach the UI.</p>
+
+    <h3>State Management</h3>
+    <p><code>usePurchasesStore</code> (Zustand) bridges the service with the UI:</p>
+    <div class="codeblock">{
+  isPremium: boolean,           // derived from active "premium" entitlement
+  packages: PurchasesPackage[], // available plans from RevenueCat
+  customerInfo: CustomerInfo,   // full RevenueCat customer object
+  isLoading: boolean,
+  isInitialized: boolean,       // prevents duplicate init calls
+}</div>
+    <ul>
+      <li><strong>On launch:</strong> <code>loadPurchases()</code> fetches packages + entitlements (non-blocking)</li>
+      <li><strong>On foreground:</strong> <code>refreshPremiumStatus()</code> re-checks entitlements (catches App Store changes)</li>
+    </ul>
+
+    <h3>Feature Gating</h3>
+    <p>Feature limits are defined in <code>config/features.ts</code> — decoupled from the SDK:</p>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>AI Import</td><td>no</td><td>yes</td></tr>
+        <tr><td>Insights</td><td>no</td><td>yes</td></tr>
+        <tr><td>Reminders</td><td>no</td><td>yes</td></tr>
+        <tr><td>Live Prices</td><td>yes</td><td>yes</td></tr>
+        <tr><td>Asset Limit</td><td>5</td><td>999</td></tr>
+      </tbody>
+    </table>
+    <p>Accessed via <code>useFeatures()</code> hook:</p>
+    <div class="codeblock">const { insights, isPremium, canAddAsset } = useFeatures();
+if (!insights) router.push('/paywall');</div>
+
+    <h3>Subscription Lifecycle</h3>
+    <div class="codeblock">App Launch
+  └─ loadPurchases() → fetch offerings + entitlements → set isPremium
+
+User hits premium feature
+  └─ useFeatures() → not premium → redirect to /paywall
+       ├─ Purchase → StoreKit → RevenueCat validates → isPremium = true
+       └─ Cancel → stay on paywall
+
+App returns to foreground
+  └─ refreshPremiumStatus() → re-check entitlements</div>
+
+    <h3>Paywall</h3>
+    <p><code>app/paywall.tsx</code> — full-screen modal presenting:</p>
+    <ul>
+      <li>Available subscription packages (from RevenueCat offerings)</li>
+      <li>1-week free trial info</li>
+      <li>Restore Purchases option</li>
+      <li>Privacy Policy / Terms of Service links</li>
+    </ul>
 
     <div class="footer">
       <p>&copy; 2026 SnapFolio.AI. All rights reserved. | <a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms</a> | <a href="proposal.html">Proposal</a></p>
